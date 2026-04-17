@@ -1,0 +1,47 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Загрузка данных
+df = pd.read_csv('/content/exams (1).csv')
+
+# 1. Базовый анализ данных
+print('--- Статистика по баллам ---')
+scores = ['math score', 'reading score', 'writing score']
+print(df[scores].describe())
+
+# 2. Визуализация данных
+plt.figure(figsize=(15, 12))
+
+# Гистограммы распределения
+plt.subplot(3, 2, 1)
+sns.histplot(df['math score'], kde=True, color='skyblue')
+plt.title('Распределение баллов по математике')
+
+plt.subplot(3, 2, 2)
+sns.histplot(df['reading score'], kde=True, color='salmon')
+plt.title('Распределение баллов по чтению')
+
+# Категориальные диаграммы
+plt.subplot(3, 2, 3)
+sns.countplot(data=df, x='gender')
+plt.title('Количество студентов по полу')
+
+plt.subplot(3, 2, 4)
+df['lunch'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#ff9999','#66b3ff'])
+plt.title('Типы питания студентов')
+
+# Динамика и сравнение
+plt.subplot(3, 2, 5)
+plt.plot(df['math score'][:50], label='Math Score', alpha=0.7)
+plt.title('Линейный график баллов (первые 50 записей)')
+plt.legend()
+
+plt.subplot(3, 2, 6)
+means = df[scores].mean()
+means.plot(kind='bar', color=['blue', 'green', 'red'])
+plt.title('Сравнение средних баллов по предметам')
+plt.xticks(rotation=0)
+
+plt.tight_layout()
+plt.show()

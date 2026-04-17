@@ -1,0 +1,158 @@
+import pandas as pd
+import numpy as np
+
+# =========================
+# 1. Загрузка данных
+# =========================
+import pandas as pd
+
+df = pd.read_csv('exams (2).csv')
+print(df.head())  # если файл загружен в Colab
+# df = pd.read_csv('StudentsPerformance.csv') # если у тебя другое имя файла
+
+print("Первые 5 строк:")
+print(df.head(), '\n')
+
+print("Последние 5 строк:")
+print(df.tail(), '\n')
+
+print("Размер датасета:")
+print(df.shape, '\n')
+
+print("Типы данных:")
+print(df.dtypes, '\n')
+
+print("Количество пропущенных значений по столбцам:")
+print(df.isnull().sum(), '\n')
+
+# =========================
+# 2. Очистка данных
+# =========================
+# Сохраняем копию, чтобы не портить исходный датасет
+df_clean = df.copy()
+
+# Проверка пропусков
+missing_before = df_clean.isnull().sum().sum()
+print(f"Общее количество пропусков до обработки: {missing_before}")
+
+# Если пропусков нет — добавим искусственно
+if missing_before == 0:
+    np.random.seed(5)
+
+    # Добавим несколько пропусков случайно
+    random_rows_num = np.random.choice(df_clean.index, size=3, replace=False)
+    random_rows_cat = np.random.choice(df_clean.index, size=2, replace=False)
+
+    df_clean.loc[random_rows_num, 'math score'] = np.nan
+    df_clean.loc[random_rows_cat, 'lunch'] = np.nan
+
+    print("\nПропусков не было, поэтому они были добавлены искусственно:")
+    print("Строки с пропусками в 'math score':", random_rows_num)
+    print("Строки с пропусками в 'lunch':", random_rows_cat)
+
+print("\nКоличество пропущенных значений после добавления:")
+print(df_clean.isnull().sum(), '\n')
+
+# Заполняем пропуски:
+# числовые столбцы — медианой
+# категориальные столбцы — модой
+num_cols = ['math score', 'reading score', 'writing score']
+cat_cols = ['gender', 'race/ethnicity', 'parental level of education',
+            'lunch', 'test preparation course']
+
+for col in num_cols:
+    df_clean[col] = df_clean[col].fillna()
+
+for col in cat_cols:
+    df_clean[col] = df_clean[col].fillna(df_clean[col].mode()[0])
+
+print("Пропуски после обработки:")
+print(df_clean.isnull().sum(), '\n')
+
+# Проверка дубликатов
+duplicates_count = df_clean.duplicated().sum()
+print(f"Количество дубликатов до удаления: {duplicates_count}")
+
+if duplicates_count > 0:
+    df_clean = df_clean.drop_duplicates()
+    print(f"Дубликаты удалены. Новый размер датасета: {df_clean.shape}")
+else:
+    print("Дубликатов нет.")
+
+# Проверка типов данных
+print("\nТипы данных после очистки:")
+print(df_clean.dtypes, '\n')
+
+# =========================
+# 3. Базовый анализ данных
+# =========================
+print("Основные статистические показатели:")
+print(df_clean[num_cols].describe(), '\n')
+
+print("Среднее значение:")
+print(df_clean[num_cols].mean(), '\n')
+
+print("Медиана:")
+print(df_clean[num_cols].median(), '\n')
+
+print("Минимум:")
+print(df_clean[num_cols].min(), '\n')
+
+print("Максимум:")
+print(df_clean[num_cols].max(), '\n')
+
+print("Стандартное отклонение:")
+print(df_clean[num_cols].std(), '\n')
+
+# Баланс классов
+print("Баланс классов по gender:")
+print(df_clean['gender'].value_counts(), '\n')
+
+# Groupby по одному признаку
+print("Средние баллы по полу:")
+print(df_clean.groupby('gender')[num_cols].mean().round(2), '\n')
+
+# Groupby по нескольким признакам
+print("Средние баллы по полу и типу питания:")
+print(df_clean.groupby(['gender', 'lunch'])[num_cols].mean().round(2), '\n')
+
+# Наиболее часто встречающиеся категории
+print("Наиболее часто встречающиеся категории:")
+for col in cat_cols:
+    print(f"{col}: {df_clean[col].mode()[0]}")
+
+print()
+
+# Топ-5 значений по выбранному критерию
+df_clean['total score'] = df_clean[num_cols].sum(axis=1)
+
+print("Топ-5 студентов по суммарному баллу:")
+print(
+    df_clean[['gender', 'race/ethnicity', 'parental level of education',
+              'math score', 'reading score', 'writing score', 'total score']]
+    .sort_values(by='total score', ascending=False)
+    .head(5)
+)
+print()
+
+# =========================
+# 4. Вывод
+# =========================
+print("ВЫВОД:")
+print("""
+1. Наиболее важные столбцы — math score, reading score, writing score,
+   потому что именно они отражают академическую успеваемость студентов.
+
+2. Среди категориальных признаков важными являются:
+   - parental level of education
+   - lunch
+   - test preparation course
+   так как они могут влиять на результаты экзаменов.
+
+3. Без применения машинного обучения можно выявить:
+   - различия в средних баллах между юношами и девушками;
+   - влияние подготовки к тесту на итоговые результаты;
+   - влияние типа питания на успеваемость;
+   - наиболее распространённые категории среди студентов;
+   - студентов с наивысшими суммарными баллами.
+""")
